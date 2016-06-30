@@ -16,6 +16,7 @@ public class Main {
 		
 		DatabaseContext.initialize();
 		// TODO component scan
+		// TODO di
 		// TODO anno-profile
 		// TODO anno-config
 		// TODO anno-cnotroller
