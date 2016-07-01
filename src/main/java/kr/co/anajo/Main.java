@@ -2,7 +2,7 @@ package kr.co.anajo;
 
 import java.util.logging.Logger;
 
-import kr.co.anajo.context.DatabaseContext;
+import kr.co.anajo.context.ComponentScanner;
 import kr.co.anajo.context.LoggingContext;
 
 public class Main {
@@ -13,18 +13,26 @@ public class Main {
 		LoggingContext.initialize();
 		logger.info("Server Start...");
 		long startTime = System.currentTimeMillis();
-		
-		DatabaseContext.initialize();
+
+		try {
+			ComponentScanner.scan("kr/co/anajo");
+		} catch (Throwable t) {
+			logger.severe(() -> String.format("component scan failed! %d", t));
+		}
 		// TODO component scan
 		// TODO di
 		// TODO anno-profile
 		// TODO anno-config
+
+		// TODO annotation config
+		// DatabaseContext.initialize();
+
 		// TODO anno-cnotroller
 		// TODO netty http bind
 		// TODO redis cache
 		// TODO Mbean
 		// TODO index
-		
+
 		logger.info(() -> String.format("Server Startup. time: %d", (System.currentTimeMillis() - startTime)));
 	}
 }
