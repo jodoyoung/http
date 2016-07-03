@@ -15,19 +15,15 @@ public class Main {
 		long startTime = System.currentTimeMillis();
 
 		try {
-			ComponentScanner.scan("kr/co/anajo");
+			ComponentScanner scanner = new ComponentScanner("kr.co.anajo");
+			scanner.scan();
 		} catch (Throwable t) {
 			logger.severe(() -> String.format("component scan failed! %d", t));
 		}
-		// TODO component scan
-		// TODO di
-		// TODO anno-profile
-		// TODO anno-config
 
 		// TODO annotation config
 		// DatabaseContext.initialize();
 
-		// TODO anno-cnotroller
 		// TODO netty http bind
 		// TODO redis cache
 		// TODO Mbean

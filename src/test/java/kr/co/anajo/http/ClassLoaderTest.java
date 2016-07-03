@@ -15,7 +15,10 @@ public class ClassLoaderTest {
 
 	@Test
 	public void loadResources() throws Exception {
-		Enumeration<URL> resources = getClass().getClassLoader().getResources("kr/co/anajo");
+		String basePackage = "kr.co.anajo";
+
+		Enumeration<URL> resources = getClass().getClassLoader()
+				.getResources(basePackage.replace(".", "/"));
 		while (resources.hasMoreElements()) {
 			URL url = resources.nextElement();
 			File dir = new File(url.toURI());
@@ -31,11 +34,19 @@ public class ClassLoaderTest {
 	private void visitClass(File dir) {
 		if (dir.isFile()) {
 			if (dir.toString().matches(regex)) {
-				System.out.println("##############class file : " + dir);
+				try {
+					String classFilePullPath = dir.getAbsolutePath();
+					String className = classFilePullPath.substring(classFilePullPath.indexOf("kr.co.anajo"), classFilePullPath.lastIndexOf(".class"));
+					System.out.println("############## class file : " + className);
+					Class klass = getClass().getClassLoader().loadClass("kr.co.anajo.Main");
+					System.out.println("############## class : " + klass.getName());
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
 			}
 		} else {
 			Arrays.stream(dir.listFiles()).forEach((t) -> visitClass(t));
 		}
 	}
-	
+
 }

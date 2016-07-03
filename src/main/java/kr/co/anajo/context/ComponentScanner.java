@@ -7,10 +7,17 @@ import java.util.Enumeration;
 
 public class ComponentScanner {
 
-	private static final String regex = "^(.+)(\\.class)$";
+	private String basePackage = "/";
 
-	public static void scan(String basePackage) throws Exception {
-		Enumeration<URL> resources = ComponentScanner.class.getClassLoader().getResources("kr/co/anajo");
+	private final String regexClass = "^(.+)(\\.class)$";
+
+	public ComponentScanner(String basePackage) {
+		this.basePackage = basePackage;
+	}
+
+	public void scan() throws Exception {
+		Enumeration<URL> resources = ComponentScanner.class.getClassLoader()
+				.getResources(this.basePackage.replace(".", "/"));
 		while (resources.hasMoreElements()) {
 			URL url = resources.nextElement();
 			File dir = new File(url.toURI());
@@ -18,10 +25,17 @@ public class ComponentScanner {
 		}
 	}
 
-	private static void visitClass(File dir) {
+	private void visitClass(File dir) {
 		if (dir.isFile()) {
-			if (dir.toString().matches(regex)) {
-				System.out.println("##############class file : " + dir);
+			if (dir.getAbsolutePath().matches(regexClass)) {
+				String className = dir.getAbsolutePath().replace(File.separator, ".");
+				className = className.substring(className.indexOf(this.basePackage), className.lastIndexOf(".class"));
+				try {
+					Class klass = getClass().getClassLoader().loadClass(className);
+					// TODO anno-config(profile), anno-cnotroller, di, proxy
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
 			}
 		} else {
 			Arrays.stream(dir.listFiles()).forEach((t) -> visitClass(t));
