@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
 
+import kr.co.anajo.context.annotation.Component;
+
 public class ComponentScanner {
 
 	private String basePackage = "/";
@@ -31,8 +33,11 @@ public class ComponentScanner {
 				String className = dir.getAbsolutePath().replace(File.separator, ".");
 				className = className.substring(className.indexOf(this.basePackage), className.lastIndexOf(".class"));
 				try {
-					Class klass = getClass().getClassLoader().loadClass(className);
-					// TODO anno-config(profile), anno-cnotroller, di, proxy
+					Class<?> klass = getClass().getClassLoader().loadClass(className);
+					if(klass.isAnnotationPresent(Component.class)) {
+						System.out.println("#### " + klass);
+						// TODO anno-config(profile), anno-cnotroller, di(proxy)
+					}
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 				}
