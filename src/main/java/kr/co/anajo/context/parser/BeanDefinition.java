@@ -3,6 +3,8 @@ package kr.co.anajo.context.parser;
 public class BeanDefinition {
 
 	private String name;
+	
+	private Class<?> sourceClass;
 
 	public String getName() {
 		return name;

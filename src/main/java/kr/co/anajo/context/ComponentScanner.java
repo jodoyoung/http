@@ -6,10 +6,15 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import kr.co.anajo.context.annotation.Component;
 
 public class ComponentScanner {
+
+	private final Logger logger = Logger.getLogger(ComponentScanner.class.getName());
 
 	private String basePackage = "/";
 
@@ -19,17 +24,19 @@ public class ComponentScanner {
 		this.basePackage = basePackage;
 	}
 
-	public void scan() throws IOException, URISyntaxException {
+	public Map<String, Class<?>> scan() throws IOException, URISyntaxException {
+		Map<String, Class<?>> beanDefinitions = new HashMap<String, Class<?>>(10);
 		Enumeration<URL> resources = ComponentScanner.class.getClassLoader()
 				.getResources(this.basePackage.replace(".", "/"));
 		while (resources.hasMoreElements()) {
 			URL url = resources.nextElement();
 			File dir = new File(url.toURI());
-			visitClass(dir);
+			visitClass(dir, beanDefinitions);
 		}
+		return beanDefinitions;
 	}
 
-	private void visitClass(File dir) {
+	private void visitClass(File dir, Map<String, Class<?>> beanDefinitions) {
 		if (dir.isFile()) {
 			if (dir.getAbsolutePath().matches(regexClass)) {
 				String className = dir.getAbsolutePath().replace(File.separator, ".");
@@ -37,15 +44,14 @@ public class ComponentScanner {
 				try {
 					Class<?> klass = getClass().getClassLoader().loadClass(className);
 					if (klass.isAnnotationPresent(Component.class)) {
-						System.out.println("#### " + klass);
-						// TODO anno-config(profile), anno-cnotroller, di(proxy)
+						beanDefinitions.put(klass.getSimpleName(), klass);
 					}
 				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+					logger.severe(() -> String.format("class not found. %d", e));
 				}
 			}
 		} else {
-			Arrays.stream(dir.listFiles()).forEach((t) -> visitClass(t));
+			Arrays.stream(dir.listFiles()).forEach((t) -> visitClass(t, beanDefinitions));
 		}
 	}
 }

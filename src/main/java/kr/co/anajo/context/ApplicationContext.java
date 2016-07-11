@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import kr.co.anajo.context.parser.BeanDefinition;
+import com.mongodb.bulk.WriteRequest.Type;
 
 public class ApplicationContext {
 
@@ -14,33 +14,55 @@ public class ApplicationContext {
 
 	private final Map<String, Object> components = new ConcurrentHashMap<String, Object>(10);
 
-	private final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<String, BeanDefinition>(10);
+	private Map<String, Class<?>> beanDefinitions;
 
-	private ComponentScanner scanner;
+	private String basePackage = "/";
 
 	public ApplicationContext(String basePackage) {
-		this.scanner = new ComponentScanner(basePackage);
+		this.basePackage = basePackage;
+	}
+
+	public <T> T getBean(String name, Class<T> type) {
+		Object bean = this.getBean(name);
+		// TODO
+		return null;
 	}
 
 	public Object getBean(String name) {
+		Object bean = this.components.get(name);
+		if (bean != null) {
+			return bean;
+		}
+
+		// TODO anno-config(profile), anno-controller, di(proxy)
 		return components.get(name);
+	}
+
+	private Object registerBean(String name) {
+		Class<?> klass = this.beanDefinitions.get(name);
+		Object bean = null;
+		try {
+			bean = klass.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			logger.severe(() -> String.format("register bean failed! %d", e));
+		}
+
+		return null;
 	}
 
 	public <T> void setBean(Class<T> type) {
 		components.put(type.getSimpleName(), type);
 	}
 
-	public BeanDefinition getBeanDefinition(String name) {
+	public Class<?> getBeanDefinition(String name) {
 		return beanDefinitions.get(name);
-	}
-
-	public void setBeanDefinition(BeanDefinition bean) {
-		beanDefinitions.put(bean.getName(), bean);
 	}
 
 	public void start() {
 		try {
-			this.scanner.scan();
+			ComponentScanner scanner = new ComponentScanner(this.basePackage);
+			beanDefinitions = scanner.scan();
+			System.out.println(beanDefinitions);
 		} catch (IOException | URISyntaxException e) {
 			logger.severe(() -> String.format("component scan failed! %d", e));
 		}
