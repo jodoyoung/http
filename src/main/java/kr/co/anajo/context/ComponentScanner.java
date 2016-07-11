@@ -1,6 +1,8 @@
 package kr.co.anajo.context;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -17,7 +19,7 @@ public class ComponentScanner {
 		this.basePackage = basePackage;
 	}
 
-	public void scan() throws Exception {
+	public void scan() throws IOException, URISyntaxException {
 		Enumeration<URL> resources = ComponentScanner.class.getClassLoader()
 				.getResources(this.basePackage.replace(".", "/"));
 		while (resources.hasMoreElements()) {
@@ -34,7 +36,7 @@ public class ComponentScanner {
 				className = className.substring(className.indexOf(this.basePackage), className.lastIndexOf(".class"));
 				try {
 					Class<?> klass = getClass().getClassLoader().loadClass(className);
-					if(klass.isAnnotationPresent(Component.class)) {
+					if (klass.isAnnotationPresent(Component.class)) {
 						System.out.println("#### " + klass);
 						// TODO anno-config(profile), anno-cnotroller, di(proxy)
 					}

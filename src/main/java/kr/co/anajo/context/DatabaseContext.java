@@ -5,12 +5,15 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoDatabase;
 
+import kr.co.anajo.context.annotation.Initialize;
+
 public class DatabaseContext {
 
 	private static MongoClient client;
 	private static MongoDatabase database;
 
-	public static synchronized void initialize() {
+	@Initialize
+	public void initialize() {
 		MongoClientOptions.Builder options = new MongoClientOptions.Builder();
 		options.connectionsPerHost(5);
 		options.connectTimeout(10);
