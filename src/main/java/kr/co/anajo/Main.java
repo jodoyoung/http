@@ -18,7 +18,7 @@ public class Main {
 			ApplicationContext context = new ApplicationContext("kr.co.anajo");
 			context.start();
 		} catch (Throwable t) {
-			logger.severe(() -> String.format("application start failed! %d", t));
+			logger.severe(() -> String.format("application start failed! %s", t));
 		}
 
 		// TODO annotation config

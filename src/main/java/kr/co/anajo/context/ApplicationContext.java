@@ -1,12 +1,14 @@
 package kr.co.anajo.context;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import com.mongodb.bulk.WriteRequest.Type;
+import kr.co.anajo.component.menu.HomeController;
+import kr.co.anajo.context.annotation.DI;
 
 public class ApplicationContext {
 
@@ -22,29 +24,46 @@ public class ApplicationContext {
 		this.basePackage = basePackage;
 	}
 
-	public <T> T getBean(String name, Class<T> type) {
-		Object bean = this.getBean(name);
-		// TODO
-		return null;
-	}
-
-	public Object getBean(String name) {
-		Object bean = this.components.get(name);
-		if (bean != null) {
-			return bean;
+	@SuppressWarnings("unchecked")
+	public <T> T getBean(Class<T> type) {
+		String beanName = type.getSimpleName();
+		Object bean = this.components.get(beanName);
+		if (bean == null) {
+			bean = this.registBean(beanName);
 		}
-
-		// TODO anno-config(profile), anno-controller, di(proxy)
-		return components.get(name);
+		if (type.isInstance(bean)) {
+			return (T) bean;
+		} else {
+			throw new IllegalArgumentException(String.format("bean type mismatch! %s != (componet)%s", type, bean));
+		}
 	}
 
-	private Object registerBean(String name) {
+	private Object registBean(String name) {
+		// TODO anno-config(profile), anno-controller, di(proxy)
 		Class<?> klass = this.beanDefinitions.get(name);
 		Object bean = null;
 		try {
 			bean = klass.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
-			logger.severe(() -> String.format("register bean failed! %d", e));
+			logger.severe(() -> String.format("register bean failed! %s", e));
+		}
+
+		this.components.put(name, bean);
+		for (Field field : klass.getDeclaredFields()) {
+			if (field.getAnnotation(DI.class) != null) {
+				String memberClassName = field.getType().getSimpleName();
+				Object memberComponent = this.components.get(memberClassName);
+				if (memberComponent != null) {
+					field.setAccessible(true);
+					try {
+						field.set(bean, memberComponent);
+					} catch (Exception e) {
+						logger.severe(() -> String.format("filed mapping failed! %s", e));
+					}
+				} else {
+					this.registBean(memberClassName);
+				}
+			}
 		}
 
 		return null;
@@ -63,8 +82,9 @@ public class ApplicationContext {
 			ComponentScanner scanner = new ComponentScanner(this.basePackage);
 			beanDefinitions = scanner.scan();
 			System.out.println(beanDefinitions);
+			getBean(HomeController.class);
 		} catch (IOException | URISyntaxException e) {
-			logger.severe(() -> String.format("component scan failed! %d", e));
+			logger.severe(() -> String.format("component scan failed! %s", e));
 		}
 	}
 
