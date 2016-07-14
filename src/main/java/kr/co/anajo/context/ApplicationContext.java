@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import kr.co.anajo.component.menu.HomeController;
 import kr.co.anajo.context.annotation.DI;
 
 public class ApplicationContext {
@@ -53,20 +52,18 @@ public class ApplicationContext {
 			if (field.getAnnotation(DI.class) != null) {
 				String memberClassName = field.getType().getSimpleName();
 				Object memberComponent = this.components.get(memberClassName);
-				if (memberComponent != null) {
-					field.setAccessible(true);
-					try {
-						field.set(bean, memberComponent);
-					} catch (Exception e) {
-						logger.severe(() -> String.format("filed mapping failed! %s", e));
-					}
-				} else {
-					this.registBean(memberClassName);
+				if (memberComponent == null) {
+					memberComponent = this.registBean(memberClassName);
+				}
+				field.setAccessible(true);
+				try {
+					field.set(bean, memberComponent);
+				} catch (Exception e) {
+					logger.severe(() -> String.format("filed mapping failed! %s", e));
 				}
 			}
 		}
-
-		return null;
+		return bean;
 	}
 
 	public <T> void setBean(Class<T> type) {
@@ -81,8 +78,6 @@ public class ApplicationContext {
 		try {
 			ComponentScanner scanner = new ComponentScanner(this.basePackage);
 			beanDefinitions = scanner.scan();
-			System.out.println(beanDefinitions);
-			getBean(HomeController.class);
 		} catch (IOException | URISyntaxException e) {
 			logger.severe(() -> String.format("component scan failed! %s", e));
 		}
