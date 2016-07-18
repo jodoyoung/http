@@ -5,12 +5,14 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoDatabase;
 
+import kr.co.anajo.context.annotation.Component;
 import kr.co.anajo.context.annotation.Initialize;
 
+@Component
 public class DatabaseContext {
 
-	private static MongoClient client;
-	private static MongoDatabase database;
+	private MongoClient client;
+	private MongoDatabase database;
 
 	@Initialize
 	public void initialize() {
@@ -23,15 +25,15 @@ public class DatabaseContext {
 		database = client.getDatabase("anajo");
 	}
 
-	public static MongoClient getClient() {
+	public MongoClient getClient() {
 		return client;
 	}
 
-	public static MongoDatabase getDatabase() {
+	public MongoDatabase getDatabase() {
 		return database;
 	}
 
-	public static synchronized void destroy() {
+	public void destroy() {
 		client.close();
 	}
 }

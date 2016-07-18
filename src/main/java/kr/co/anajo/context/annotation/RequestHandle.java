@@ -11,5 +11,4 @@ public @interface RequestHandle {
 
 	public String url();
 
-	public String handler();
 }

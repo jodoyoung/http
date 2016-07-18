@@ -2,6 +2,8 @@ package kr.co.anajo.context;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +17,7 @@ public class ApplicationContext {
 
 	private final Map<String, Object> components = new ConcurrentHashMap<String, Object>(10);
 
-	private Map<String, Class<?>> beanDefinitions;
+	private ComponentDefinitions componentDefinitions;
 
 	private String basePackage = "/";
 
@@ -26,7 +28,7 @@ public class ApplicationContext {
 	@SuppressWarnings("unchecked")
 	public <T> T getBean(Class<T> type) {
 		String beanName = type.getSimpleName();
-		Object bean = this.components.get(beanName);
+		Object bean = this.getBean(beanName);
 		if (bean == null) {
 			bean = this.registBean(beanName);
 		}
@@ -37,9 +39,21 @@ public class ApplicationContext {
 		}
 	}
 
+	public Object getBean(String name) {
+		Object bean = this.components.get(name);
+		if (bean == null) {
+			bean = this.registBean(name);
+		}
+		return bean;
+	}
+
+	public <T> void setBean(Class<T> type) {
+		components.put(type.getSimpleName(), type);
+	}
+
 	private Object registBean(String name) {
 		// TODO anno-config(profile), anno-controller, di(proxy)
-		Class<?> klass = this.beanDefinitions.get(name);
+		Class<?> klass = this.componentDefinitions.get(name);
 		Object bean = null;
 		try {
 			bean = klass.newInstance();
@@ -49,7 +63,7 @@ public class ApplicationContext {
 
 		this.components.put(name, bean);
 		for (Field field : klass.getDeclaredFields()) {
-			if (field.getAnnotation(DI.class) != null) {
+			if (field.isAnnotationPresent(DI.class)) {
 				String memberClassName = field.getType().getSimpleName();
 				Object memberComponent = this.components.get(memberClassName);
 				if (memberComponent == null) {
@@ -66,20 +80,29 @@ public class ApplicationContext {
 		return bean;
 	}
 
-	public <T> void setBean(Class<T> type) {
-		components.put(type.getSimpleName(), type);
-	}
-
-	public Class<?> getBeanDefinition(String name) {
-		return beanDefinitions.get(name);
-	}
-
 	public void start() {
 		try {
 			ComponentScanner scanner = new ComponentScanner(this.basePackage);
-			beanDefinitions = scanner.scan();
+			this.componentDefinitions = scanner.scan();
+			this.initialize();
 		} catch (IOException | URISyntaxException e) {
 			logger.severe(() -> String.format("component scan failed! %s", e));
+		}
+	}
+
+	public void initialize() {
+		for (String initFunction : this.componentDefinitions.getInitializeMethods()) {
+			String[] initFunc = initFunction.split("\\.");
+			Object obj = this.getBean(initFunc[0]);
+			Class<?> klass = obj.getClass();
+			try {
+				Method method = klass.getDeclaredMethod(initFunc[1], null);
+				method.invoke(obj, null);
+			} catch (NoSuchMethodException | SecurityException e) {
+				logger.severe(() -> String.format("initialize method not found! %s", e));
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				logger.severe(() -> String.format("initialize method invoke failed! %s", e));
+			}
 		}
 	}
 

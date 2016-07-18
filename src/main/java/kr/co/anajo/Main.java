@@ -21,9 +21,6 @@ public class Main {
 			logger.severe(() -> String.format("application start failed! %s", t));
 		}
 
-		// TODO annotation config
-		// DatabaseContext.initialize();
-
 		// TODO netty http bind
 		// TODO redis cache
 		// TODO Mbean
