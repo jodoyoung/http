@@ -21,7 +21,6 @@ public class Main {
 			logger.severe(() -> String.format("application start failed! %s", t));
 		}
 
-		// TODO netty http bind
 		// TODO redis cache
 		// TODO Mbean
 		// TODO index
