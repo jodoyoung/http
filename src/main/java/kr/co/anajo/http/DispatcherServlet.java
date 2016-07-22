@@ -2,16 +2,19 @@ package kr.co.anajo.http;
 
 import java.util.logging.Logger;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpMessage;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.LastHttpContent;
 
 public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessage> {
 
@@ -36,6 +39,21 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 			System.out.println("HTTP: " + method);
 		}
 
+		if (msg instanceof HttpContent) {
+			HttpContent httpContent = (HttpContent) msg;
+
+			ByteBuf content = httpContent.content();
+
+			if (msg instanceof LastHttpContent) {
+				LastHttpContent trailer = (LastHttpContent) msg;
+				// readPostData();
+			}
+		}
+	}
+
+	@Override
+	public void channelReadComplete(ChannelHandlerContext ctx) {
+		ctx.flush();
 	}
 
 }

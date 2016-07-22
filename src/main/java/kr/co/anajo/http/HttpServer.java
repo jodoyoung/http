@@ -1,5 +1,7 @@
 package kr.co.anajo.http;
 
+import java.util.logging.Logger;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -13,6 +15,8 @@ import kr.co.anajo.context.annotation.Initialize;
 
 @Component
 public class HttpServer {
+
+	private final Logger logger = Logger.getLogger(HttpServer.class.getName());
 
 	@Initialize
 	public void startup() {
@@ -37,7 +41,6 @@ public class HttpServer {
 				workerGroup.shutdownGracefully();
 			}
 		});
-		serverThread.setDaemon(true);
 		serverThread.start();
 	}
 

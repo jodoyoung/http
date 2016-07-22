@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import kr.co.anajo.context.annotation.DI;
@@ -95,30 +94,18 @@ public class ApplicationContext {
 	public void initialize() {
 		List<String> initFunctions = this.componentDefinitions.getInitializeMethods();
 
-		CountDownLatch latch = new CountDownLatch(initFunctions.size());
 		for (String initFunction : initFunctions) {
-			Thread initThread = new Thread(() -> {
-				String[] initFunc = initFunction.split("\\.");
-				Object obj = this.getBean(initFunc[0]);
-				Class<?> klass = obj.getClass();
-				try {
-					Method method = klass.getDeclaredMethod(initFunc[1], null);
-					method.invoke(obj, null);
-				} catch (NoSuchMethodException | SecurityException e) {
-					logger.severe(() -> String.format("initialize method not found! %s", e));
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					logger.severe(() -> String.format("initialize method invoke failed! %s", e));
-				} finally {
-					latch.countDown();
-				}
-			});
-			initThread.setDaemon(true);
-			initThread.start();
-		}
-		try {
-			latch.await();
-		} catch (InterruptedException e) {
-			logger.severe(() -> String.format("latch await interrupted! %s", e));
+			String[] initFunc = initFunction.split("\\.");
+			Object obj = this.getBean(initFunc[0]);
+			Class<?> klass = obj.getClass();
+			try {
+				Method method = klass.getDeclaredMethod(initFunc[1], null);
+				method.invoke(obj, null);
+			} catch (NoSuchMethodException | SecurityException e) {
+				logger.severe(() -> String.format("initialize method not found! %s", e));
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				logger.severe(() -> String.format("initialize method invoke failed! %s", e));
+			}
 		}
 	}
 
