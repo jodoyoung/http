@@ -6,7 +6,6 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoDatabase;
 
 import kr.co.anajo.context.annotation.Component;
-import kr.co.anajo.context.annotation.Initialize;
 
 @Component
 public class DatabaseContext {
@@ -14,7 +13,7 @@ public class DatabaseContext {
 	private MongoClient client;
 	private MongoDatabase database;
 
-	@Initialize
+	// @Initialize
 	public void initialize() {
 		MongoClientOptions.Builder options = new MongoClientOptions.Builder();
 		options.connectionsPerHost(5);
