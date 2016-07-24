@@ -22,21 +22,25 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 
 	private final Logger logger = Logger.getLogger(DispatcherServlet.class.getName());
 
-	private HttpRequest request;
-
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, FullHttpMessage msg) throws Exception {
+		HttpRequest request = null;
+		FullHttpResponse response = null;
+
 		if (msg instanceof HttpRequest) {
-			this.request = (HttpRequest) msg;
+			request = (HttpRequest) msg;
 
 			if (HttpUtil.is100ContinueExpected(msg)) {
 				ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE));
 			}
-			boolean isKeepAlive = HttpUtil.isKeepAlive(request);
-			FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
+			
+			// controller replace
+			
+			response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
 					Unpooled.wrappedBuffer("11111111".getBytes()));
 			response.headers().set(new AsciiString("Content-Type"), "text/plain");
 			response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
+			
 
 			if (HttpUtil.isKeepAlive(request)) {
 				ctx.write(response).addListener(ChannelFutureListener.CLOSE);

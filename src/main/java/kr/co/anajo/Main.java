@@ -17,6 +17,7 @@ public class Main {
 		try {
 			ApplicationContext context = new ApplicationContext("kr.co.anajo");
 			context.start();
+			// TODO application context hodler
 		} catch (Throwable t) {
 			logger.severe(() -> String.format("application start failed! %s", t));
 		}
