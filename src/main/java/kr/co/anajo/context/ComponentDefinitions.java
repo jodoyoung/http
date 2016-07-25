@@ -29,11 +29,11 @@ public class ComponentDefinitions {
 		return this.initializeMethods;
 	}
 
-	public void addUrlHandler(String url, String handler) {
-		this.urlHandlerMappings.put(url, handler);
+	public void addUrlHandler(String uri, String handler) {
+		this.urlHandlerMappings.put(uri, handler);
 	}
 
-	public String getUrlHandler(String url) {
-		return this.urlHandlerMappings.get(url);
+	public String getUrlHandler(String uri) {
+		return this.urlHandlerMappings.get(uri);
 	}
 }

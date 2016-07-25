@@ -22,6 +22,21 @@ public class ApplicationContext {
 
 	private String basePackage = "/";
 
+	private static class ApplicationContextHolder {
+		private static ApplicationContext instance = null;
+	}
+
+	public static ApplicationContext getInstance() {
+		while (ApplicationContextHolder.instance == null) {
+			try {
+				Thread.sleep(300);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		return ApplicationContextHolder.instance;
+	}
+
 	public ApplicationContext(String basePackage) {
 		this.basePackage = basePackage;
 	}
@@ -86,6 +101,7 @@ public class ApplicationContext {
 			ComponentScanner scanner = new ComponentScanner(this.basePackage);
 			this.componentDefinitions = scanner.scan();
 			this.initialize();
+			ApplicationContextHolder.instance = this;
 		} catch (IOException | URISyntaxException e) {
 			logger.severe(() -> String.format("component scan failed! %s", e));
 		}
@@ -111,5 +127,9 @@ public class ApplicationContext {
 
 	public void stop() {
 		// TODO database context destroy
+	}
+
+	public String getUrlHandler(String uri) {
+		return this.componentDefinitions.getUrlHandler(uri);
 	}
 }

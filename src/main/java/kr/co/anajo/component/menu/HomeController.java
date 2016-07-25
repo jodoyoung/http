@@ -6,7 +6,7 @@ import kr.co.anajo.context.annotation.RequestHandle;
 @Component
 public class HomeController {
 
-	@RequestHandle(url = "/")
+	@RequestHandle(url = "/home")
 	public void home() {
 
 	}
