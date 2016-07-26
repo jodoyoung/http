@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AsciiString;
+import io.netty.util.CharsetUtil;
 import kr.co.anajo.context.ApplicationContext;
 
 public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessage> {
@@ -46,6 +47,11 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 		if (msg instanceof HttpRequest) {
 			request = (HttpRequest) msg;
 
+			if (request.decoderResult().isFailure()) {
+				sendError(ctx, HttpResponseStatus.BAD_REQUEST);
+				return;
+			}
+
 			if (HttpUtil.is100ContinueExpected(msg)) {
 				ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE));
 			}
@@ -58,21 +64,25 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 			System.out.println("HTTP: " + method);
 
 			if (!ignoreAuthenticationUri.contains(uri)) {
-				// TODO authentication (ex.login page, login proccess)
+				// TODO authentication filter procced (ex.login page, login
+				// proccess)
 			}
 
 			if ("/favicon.ico".equalsIgnoreCase(uri) || uri.startsWith("/static")) {
 				String baseFilePath = this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
 						.getPath();
-				if(baseFilePath.startsWith("/")) {
+				if (baseFilePath.startsWith("/")) {
 					baseFilePath = baseFilePath.substring(1);
 				}
 				Path staticResourcePath = Paths.get(baseFilePath + uri);
 				if (!Files.exists(staticResourcePath)) {
 					logger.info(() -> String.format("not found static resource - uri: %s", uri));
-					// TODO return 404 Error
+					sendError(ctx, HttpResponseStatus.NOT_FOUND);
+					return;
 				}
-				// TODO favicon, static resource
+				response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+				response.headers().set(new AsciiString("Content-Type"), "text/plain");
+				response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
 			} else {
 				// controller replace
 				ApplicationContext applicationContext = ApplicationContext.getInstance();
@@ -89,13 +99,13 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 				Object controller = applicationContext.getBean(handleClassName);
 				Class<?> klass = controller.getClass();
 				Method handleMethod = klass.getDeclaredMethod(handleMethodName, null);
-				System.out.println(handleMethod);
-			}
+				logger.info(() -> String.format("request uri: %s, handler: %s", uri, handleMethod));
 
-			response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
-					Unpooled.wrappedBuffer("11111111".getBytes()));
-			response.headers().set(new AsciiString("Content-Type"), "text/plain");
-			response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
+				response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
+						Unpooled.wrappedBuffer("11111111".getBytes()));
+				response.headers().set(new AsciiString("Content-Type"), "text/plain");
+				response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
+			}
 
 			if (HttpUtil.isKeepAlive(request)) {
 				ctx.write(response).addListener(ChannelFutureListener.CLOSE);
@@ -120,6 +130,14 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();
+	}
+
+	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
+		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,
+				Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
+		response.headers().set(new AsciiString("Content-Type"), "text/plain; charset=UTF-8");
+
+		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 	}
 
 }

@@ -68,7 +68,7 @@ public class ApplicationContext {
 	}
 
 	private Object registBean(String name) {
-		// TODO anno-config(profile), anno-controller, di(proxy)
+		// TODO anno-config(profile)
 		Class<?> klass = this.componentDefinitions.get(name);
 		Object bean = null;
 		try {
