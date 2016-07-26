@@ -1,6 +1,9 @@
 package kr.co.anajo.http;
 
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -59,6 +62,16 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 			}
 
 			if ("/favicon.ico".equalsIgnoreCase(uri) || uri.startsWith("/static")) {
+				String baseFilePath = this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
+						.getPath();
+				if(baseFilePath.startsWith("/")) {
+					baseFilePath = baseFilePath.substring(1);
+				}
+				Path staticResourcePath = Paths.get(baseFilePath + uri);
+				if (!Files.exists(staticResourcePath)) {
+					logger.info(() -> String.format("not found static resource - uri: %s", uri));
+					// TODO return 404 Error
+				}
 				// TODO favicon, static resource
 			} else {
 				// controller replace
