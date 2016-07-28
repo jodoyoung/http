@@ -3,11 +3,12 @@ package kr.co.anajo.http;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequestDecoder;
-import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.stream.ChunkedWriteHandler;
+import kr.co.anajo.http.handler.ApiHandler;
+import kr.co.anajo.http.handler.StaticResourceHandler;
 
 public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 
@@ -19,17 +20,22 @@ public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 
 	@Override
 	protected void initChannel(SocketChannel ch) throws Exception {
-		ChannelPipeline p = ch.pipeline();
+		ChannelPipeline pipeline = ch.pipeline();
 
 		if (this.sslCtx != null) {
-			p.addLast(sslCtx.newHandler(ch.alloc()));
+			pipeline.addLast(sslCtx.newHandler(ch.alloc()));
 		}
 
-		p.addLast(new HttpRequestDecoder());
-		p.addLast(new HttpObjectAggregator(65536));
-		p.addLast(new HttpResponseEncoder());
-		p.addLast(new HttpContentCompressor());
-		p.addLast(new DispatcherServlet());
+		// pipeline.addLast(new HttpRequestDecoder());
+		// pipeline.addLast(new HttpObjectAggregator(65536));
+		// pipeline.addLast(new HttpResponseEncoder());
+		// pipeline.addLast(new HttpContentCompressor());
+		// pipeline.addLast(new DispatcherServlet());
+		pipeline.addLast(new HttpServerCodec());
+		pipeline.addLast(new HttpObjectAggregator(65536));
+		pipeline.addLast(new ChunkedWriteHandler());
+		pipeline.addLast(new StaticResourceHandler());
+		pipeline.addLast(new ApiHandler());
 	}
 
 }

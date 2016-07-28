@@ -1,4 +1,10 @@
-package kr.co.anajo.http;
+package kr.co.anajo.http.handler;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -22,15 +28,14 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 import kr.co.anajo.context.ApplicationContext;
 
-public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessage> {
+public class ApiHandler extends SimpleChannelInboundHandler<FullHttpMessage> {
 
-	private final Logger logger = Logger.getLogger(DispatcherServlet.class.getName());
+	private final Logger logger = Logger.getLogger(ApiHandler.class.getName());
 
 	private static List<String> ignoreAuthenticationUri = new ArrayList<String>();
 	static {
@@ -48,12 +53,12 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 			request = (HttpRequest) msg;
 
 			if (request.decoderResult().isFailure()) {
-				sendError(ctx, HttpResponseStatus.BAD_REQUEST);
+				sendError(ctx, BAD_REQUEST);
 				return;
 			}
 
 			if (HttpUtil.is100ContinueExpected(msg)) {
-				ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE));
+				ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
 			}
 
 			HttpHeaders headers = request.headers();
@@ -68,44 +73,28 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 				// proccess)
 			}
 
-			if ("/favicon.ico".equalsIgnoreCase(uri) || uri.startsWith("/static")) {
-				String baseFilePath = this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
-						.getPath();
-				if (baseFilePath.startsWith("/")) {
-					baseFilePath = baseFilePath.substring(1);
-				}
-				Path staticResourcePath = Paths.get(baseFilePath + uri);
-				if (!Files.exists(staticResourcePath)) {
-					logger.info(() -> String.format("not found static resource - uri: %s", uri));
-					sendError(ctx, HttpResponseStatus.NOT_FOUND);
-					return;
-				}
-				response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-				response.headers().set(new AsciiString("Content-Type"), "text/plain");
-				response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
-			} else {
-				// controller replace
-				ApplicationContext applicationContext = ApplicationContext.getInstance();
-				String handleClassMethod = applicationContext.getUrlHandler(uri);
+			// controller replace
+			ApplicationContext applicationContext = ApplicationContext.getInstance();
+			String handleClassMethod = applicationContext.getUrlHandler(uri);
 
-				if (handleClassMethod == null) {
-					logger.info(() -> String.format("not found request handler - uri: %s", uri));
-				}
-
-				String[] handler = handleClassMethod.split("\\.");
-				String handleClassName = handler[0];
-				String handleMethodName = handler[1];
-
-				Object controller = applicationContext.getBean(handleClassName);
-				Class<?> klass = controller.getClass();
-				Method handleMethod = klass.getDeclaredMethod(handleMethodName, null);
-				logger.info(() -> String.format("request uri: %s, handler: %s", uri, handleMethod));
-
-				response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
-						Unpooled.wrappedBuffer("11111111".getBytes()));
-				response.headers().set(new AsciiString("Content-Type"), "text/plain");
-				response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
+			if (handleClassMethod == null) {
+				logger.info(() -> String.format("not found request handler - uri: %s", uri));
+				sendError(ctx, NOT_FOUND);
+				return;
 			}
+
+			String[] handler = handleClassMethod.split("\\.");
+			String handleClassName = handler[0];
+			String handleMethodName = handler[1];
+
+			Object controller = applicationContext.getBean(handleClassName);
+			Class<?> klass = controller.getClass();
+			Method handleMethod = klass.getDeclaredMethod(handleMethodName, null);
+			logger.info(() -> String.format("request uri: %s, handler: %s", uri, handleMethod));
+
+			response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("11111111".getBytes()));
+			response.headers().set(new AsciiString("Content-Type"), "text/plain");
+			response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
 
 			if (HttpUtil.isKeepAlive(request)) {
 				ctx.write(response).addListener(ChannelFutureListener.CLOSE);
@@ -133,7 +122,7 @@ public class DispatcherServlet extends SimpleChannelInboundHandler<FullHttpMessa
 	}
 
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-		FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,
+		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
 				Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
 		response.headers().set(new AsciiString("Content-Type"), "text/plain; charset=UTF-8");
 
