@@ -1,6 +1,7 @@
 package kr.co.anajo.http.handler;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import java.util.ArrayList;
@@ -36,11 +37,19 @@ public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpR
 		final String uri = request.uri();
 
 		if (!ignoreAuthenticationUri.contains(uri)) {
-			// TODO sendRedirect
-			// authentication filter procced (ex.login page, login proccess)
+			sendRedirect(ctx, "/auth/login");
+			return;
 		}
 
 		ctx.fireChannelRead(request);
+	}
+
+	private static void sendRedirect(ChannelHandlerContext ctx, String newUri) {
+		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
+		response.headers().set(HttpHeaderNames.LOCATION, newUri);
+
+		// Close the connection as soon as the error message is sent.
+		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 	}
 
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
