@@ -17,10 +17,12 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.CharsetUtil;
+import kr.co.anajo.context.ApplicationContext;
 
 public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
 	private static List<String> ignoreAuthenticationUri = new ArrayList<String>();
+
 	static {
 		ignoreAuthenticationUri.add("/auth");
 		ignoreAuthenticationUri.add("/favicon.ico");
@@ -36,11 +38,12 @@ public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpR
 
 		final String uri = request.uri();
 
-		if (!ignoreAuthenticationUri.contains(uri)) {
+		PathMatcher matcher = ApplicationContext.getInstance().getBean(PathMatcher.class);
+
+		if (!matcher.isContains(ignoreAuthenticationUri, uri)) {
 			sendRedirect(ctx, "/auth/login");
 			return;
 		}
-
 		ctx.fireChannelRead(request);
 	}
 

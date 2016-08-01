@@ -8,6 +8,8 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import kr.co.anajo.http.handler.ApiHandler;
+import kr.co.anajo.http.handler.AuthenticationHandler;
+import kr.co.anajo.http.handler.DispatcherHandler;
 import kr.co.anajo.http.handler.StaticResourceHandler;
 
 public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
@@ -34,8 +36,10 @@ public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 		pipeline.addLast(new HttpServerCodec());
 		pipeline.addLast(new HttpObjectAggregator(65536));
 		pipeline.addLast(new ChunkedWriteHandler());
-		pipeline.addLast(new StaticResourceHandler());
-		pipeline.addLast(new ApiHandler());
+//		pipeline.addLast(new AuthenticationHandler());
+//		pipeline.addLast(new StaticResourceHandler());
+//		pipeline.addLast(new ApiHandler());
+		pipeline.addLast(new DispatcherHandler());
 	}
 
 }
