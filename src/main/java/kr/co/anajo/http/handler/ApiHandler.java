@@ -7,18 +7,12 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -32,20 +26,14 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 import kr.co.anajo.context.ApplicationContext;
+import kr.co.anajo.context.annotation.Component;
 
-public class ApiHandler extends SimpleChannelInboundHandler<FullHttpMessage> {
+@Component
+public class ApiHandler {
 
 	private final Logger logger = Logger.getLogger(ApiHandler.class.getName());
 
-	private static List<String> ignoreAuthenticationUri = new ArrayList<String>();
-	static {
-		ignoreAuthenticationUri.add("/auth");
-		ignoreAuthenticationUri.add("/favicon.ico");
-		ignoreAuthenticationUri.add("/static");
-	}
-
-	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, FullHttpMessage msg) throws Exception {
+	protected void handle(ChannelHandlerContext ctx, FullHttpMessage msg) throws Exception {
 		HttpRequest request = null;
 		FullHttpResponse response = null;
 
@@ -67,11 +55,6 @@ public class ApiHandler extends SimpleChannelInboundHandler<FullHttpMessage> {
 			System.out.println("HTTP: " + headers);
 			System.out.println("HTTP: " + uri);
 			System.out.println("HTTP: " + method);
-
-			if (!ignoreAuthenticationUri.contains(uri)) {
-				// TODO authentication filter procced (ex.login page, login
-				// proccess)
-			}
 
 			// controller replace
 			ApplicationContext applicationContext = ApplicationContext.getInstance();
@@ -116,7 +99,6 @@ public class ApiHandler extends SimpleChannelInboundHandler<FullHttpMessage> {
 		}
 	}
 
-	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();
 	}

@@ -1,9 +1,7 @@
 package kr.co.anajo.http.handler;
 
 import static io.netty.handler.codec.http.HttpMethod.GET;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
-import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
@@ -34,7 +32,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelProgressiveFuture;
 import io.netty.channel.ChannelProgressiveFutureListener;
 import io.netty.channel.DefaultFileRegion;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -43,48 +40,40 @@ import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.SystemPropertyUtil;
+import kr.co.anajo.context.ApplicationContext;
+import kr.co.anajo.context.annotation.Component;
+import kr.co.anajo.http.ResponseHelper;
 
-public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+@Component
+public class StaticResourceHandler {
 
-	public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
-	public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
-	public static final int HTTP_CACHE_SECONDS = 60;
+	private final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
+	private final String HTTP_DATE_GMT_TIMEZONE = "GMT";
+	private final int HTTP_CACHE_SECONDS = 60;
+	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
 
-	@Override
-	public void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-		if (!request.decoderResult().isSuccess()) {
-			sendError(ctx, BAD_REQUEST);
+	public void handle(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+		if (request.method() != GET) {
+			responseHelper.sendError(ctx, METHOD_NOT_ALLOWED);
 			return;
 		}
 
 		final String uri = request.uri();
-
-		if (!"/favicon.ico".equalsIgnoreCase(uri) && !uri.startsWith("/static")) {
-			ctx.fireChannelRead(request);
-			return;
-		}
-
-		if (request.method() != GET) {
-			sendError(ctx, METHOD_NOT_ALLOWED);
-			return;
-		}
-
 		final String path = sanitizeUri(uri);
 		if (path == null) {
-			sendError(ctx, FORBIDDEN);
+			responseHelper.sendError(ctx, FORBIDDEN);
 			return;
 		}
 
 		File file = new File(path);
 		if (file.isHidden() || !file.exists()) {
-			sendError(ctx, NOT_FOUND);
+			responseHelper.sendError(ctx, NOT_FOUND);
 			return;
 		}
 
@@ -92,13 +81,13 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 			if (uri.endsWith("/")) {
 				sendListing(ctx, file);
 			} else {
-				sendRedirect(ctx, uri + '/');
+				responseHelper.sendRedirect(ctx, uri + '/');
 			}
 			return;
 		}
 
 		if (!file.isFile()) {
-			sendError(ctx, FORBIDDEN);
+			responseHelper.sendError(ctx, FORBIDDEN);
 			return;
 		}
 
@@ -123,7 +112,7 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 		try {
 			raf = new RandomAccessFile(file, "r");
 		} catch (FileNotFoundException ignore) {
-			sendError(ctx, NOT_FOUND);
+			responseHelper.sendError(ctx, NOT_FOUND);
 			return;
 		}
 		long fileLength = raf.length();
@@ -178,11 +167,10 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 		}
 	}
 
-	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		cause.printStackTrace();
 		if (ctx.channel().isActive()) {
-			sendError(ctx, INTERNAL_SERVER_ERROR);
+			responseHelper.sendError(ctx, INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -250,23 +238,6 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 	}
 
-	private static void sendRedirect(ChannelHandlerContext ctx, String newUri) {
-		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
-		response.headers().set(HttpHeaderNames.LOCATION, newUri);
-
-		// Close the connection as soon as the error message is sent.
-		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-	}
-
-	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
-				Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
-		response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-
-		// Close the connection as soon as the error message is sent.
-		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-	}
-
 	/**
 	 * When file timestamp is the same as what the browser is sending up, send a
 	 * "304 Not Modified"
@@ -274,7 +245,7 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 	 * @param ctx
 	 *            Context
 	 */
-	private static void sendNotModified(ChannelHandlerContext ctx) {
+	private void sendNotModified(ChannelHandlerContext ctx) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, NOT_MODIFIED);
 		setDateHeader(response);
 
@@ -288,7 +259,7 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 	 * @param response
 	 *            HTTP response
 	 */
-	private static void setDateHeader(FullHttpResponse response) {
+	private void setDateHeader(FullHttpResponse response) {
 		SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
 		dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
 
@@ -304,7 +275,7 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 	 * @param fileToCache
 	 *            file to extract content type
 	 */
-	private static void setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
+	private void setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
 		SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
 		dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
 
@@ -328,7 +299,7 @@ public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpR
 	 * @param file
 	 *            file to extract content type
 	 */
-	private static void setContentTypeHeader(HttpResponse response, File file) {
+	private void setContentTypeHeader(HttpResponse response, File file) {
 		MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 		response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
 	}

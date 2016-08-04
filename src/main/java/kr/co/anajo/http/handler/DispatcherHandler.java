@@ -5,9 +5,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpMessage;
-import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.LastHttpContent;
 import kr.co.anajo.context.ApplicationContext;
 import kr.co.anajo.http.ResponseHelper;
 
@@ -23,23 +22,21 @@ public class DispatcherHandler extends SimpleChannelInboundHandler<FullHttpMessa
 		}
 
 		if (msg instanceof HttpRequest) {
-			HttpRequest request = (HttpRequest) msg;
+			FullHttpRequest request = (FullHttpRequest) msg;
 			final String uri = request.uri();
 
 			PathMatcher matcher = ApplicationContext.getInstance().getBean(PathMatcher.class);
 			if (matcher.isStaticUri(uri)) {
-				// TODO static controller
+				ApplicationContext.getInstance().getBean(StaticResourceHandler.class).handle(ctx, request);
+				return;
 			}
-			if (!matcher.isAuthenticationIgnoreUri(uri)) {
-				// TODO authentication check
-			}
+			// if (!matcher.isAuthenticationIgnoreUri(uri)) {
+			// // TODO authentication check
+			// responseHelper.sendRedirect(ctx, "/login");
+			// }
+
 			// TODO api(page & ajax) controller
-		}
-
-		if (msg instanceof HttpContent) {
-			if (msg instanceof LastHttpContent) {
-
-			}
+			ApplicationContext.getInstance().getBean(ApiHandler.class).handle(ctx, msg);
 		}
 
 	}

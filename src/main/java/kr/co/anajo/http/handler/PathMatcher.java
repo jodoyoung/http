@@ -15,7 +15,7 @@ public class PathMatcher {
 	};
 
 	public boolean isStaticUri(String uri) {
-		if (uri != null && ("favicon.ico".equalsIgnoreCase(uri) || uri.startsWith("/static"))) {
+		if (uri != null && ("/favicon.ico".equalsIgnoreCase(uri) || uri.startsWith("/static"))) {
 			return true;
 		}
 		return false;
