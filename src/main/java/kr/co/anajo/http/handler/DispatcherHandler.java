@@ -2,6 +2,8 @@ package kr.co.anajo.http.handler;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 
+import java.util.logging.Logger;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpMessage;
@@ -12,6 +14,8 @@ import kr.co.anajo.http.ResponseHelper;
 
 public class DispatcherHandler extends SimpleChannelInboundHandler<FullHttpMessage> {
 
+	private final Logger logger = Logger.getLogger(DispatcherHandler.class.getName());
+	
 	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
 
 	@Override
@@ -24,6 +28,7 @@ public class DispatcherHandler extends SimpleChannelInboundHandler<FullHttpMessa
 		if (msg instanceof HttpRequest) {
 			FullHttpRequest request = (FullHttpRequest) msg;
 			final String uri = request.uri();
+			logger.info(() -> String.format("request uri: %s", uri));
 
 			PathMatcher matcher = ApplicationContext.getInstance().getBean(PathMatcher.class);
 			if (matcher.isStaticUri(uri)) {
@@ -38,7 +43,12 @@ public class DispatcherHandler extends SimpleChannelInboundHandler<FullHttpMessa
 			// TODO api(page & ajax) controller
 			ApplicationContext.getInstance().getBean(ApiHandler.class).handle(ctx, msg);
 		}
-
 	}
+	
+	@Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
+    }
 
 }

@@ -23,9 +23,9 @@ public class LoggingContext {
 		applicationLogger.addHandler(consoleHandler);
 
 		try {
-			final FileHandler fileHandler = new FileHandler("http", Integer.MAX_VALUE, 10);
-			fileHandler.setFormatter(simpleFormatter);
-			applicationLogger.addHandler(fileHandler);
+//			final FileHandler fileHandler = new FileHandler("http", Integer.MAX_VALUE, 10);
+//			fileHandler.setFormatter(simpleFormatter);
+//			applicationLogger.addHandler(fileHandler);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

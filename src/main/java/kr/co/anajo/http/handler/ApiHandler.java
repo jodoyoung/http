@@ -49,12 +49,7 @@ public class ApiHandler {
 				ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
 			}
 
-			HttpHeaders headers = request.headers();
 			String uri = request.uri();
-			HttpMethod method = request.method();
-			System.out.println("HTTP: " + headers);
-			System.out.println("HTTP: " + uri);
-			System.out.println("HTTP: " + method);
 
 			// controller replace
 			ApplicationContext applicationContext = ApplicationContext.getInstance();
@@ -80,10 +75,10 @@ public class ApiHandler {
 			response.headers().set(new AsciiString("Content-Length"), response.content().readableBytes());
 
 			if (HttpUtil.isKeepAlive(request)) {
-				ctx.write(response).addListener(ChannelFutureListener.CLOSE);
-			} else {
 				response.headers().set(new AsciiString("Connection"), new AsciiString("keep-alive"));
 				ctx.write(response);
+			} else {
+				ctx.write(response).addListener(ChannelFutureListener.CLOSE);
 			}
 		}
 
@@ -97,6 +92,7 @@ public class ApiHandler {
 				// readPostData();
 			}
 		}
+		ctx.flush();
 	}
 
 	public void channelReadComplete(ChannelHandlerContext ctx) {
