@@ -1,29 +1,22 @@
 package kr.co.anajo.http.handler;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-
 import java.util.logging.Logger;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.FullHttpMessage;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
 import kr.co.anajo.context.ApplicationContext;
 import kr.co.anajo.http.ResponseHelper;
 
-public class DispatcherHandler extends SimpleChannelInboundHandler<FullHttpMessage> {
+public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
 	private final Logger logger = Logger.getLogger(DispatcherHandler.class.getName());
-	
+
 	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, FullHttpMessage msg) throws Exception {
-		if (!msg.decoderResult().isSuccess()) {
-			responseHelper.sendError(ctx, BAD_REQUEST);
-			return;
-		}
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
 		if (msg instanceof HttpRequest) {
 			FullHttpRequest request = (FullHttpRequest) msg;
@@ -41,14 +34,19 @@ public class DispatcherHandler extends SimpleChannelInboundHandler<FullHttpMessa
 			// }
 
 			// TODO api(page & ajax) controller
-			ApplicationContext.getInstance().getBean(ApiHandler.class).handle(ctx, msg);
+			ApplicationContext.getInstance().getBean(ApiHandler.class).handle(ctx, request);
 		}
 	}
 	
 	@Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        ctx.close();
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+        ctx.flush();
     }
+
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+		cause.printStackTrace();
+		ctx.close();
+	}
 
 }

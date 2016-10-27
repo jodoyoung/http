@@ -92,11 +92,6 @@ public class ApiHandler {
 				// readPostData();
 			}
 		}
-		ctx.flush();
-	}
-
-	public void channelReadComplete(ChannelHandlerContext ctx) {
-		ctx.flush();
 	}
 
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
