@@ -95,7 +95,6 @@ public class ApiHandler {
 		ctx.flush();
 	}
 
-
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
 				Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
