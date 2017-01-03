@@ -95,9 +95,6 @@ public class ApiHandler {
 		ctx.flush();
 	}
 
-	public void channelReadComplete(ChannelHandlerContext ctx) {
-		ctx.flush();
-	}
 
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,

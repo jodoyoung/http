@@ -8,6 +8,6 @@ public class HomeController {
 
 	@RequestHandle(url = "/")
 	public void home() {
-
+		
 	}
 }
