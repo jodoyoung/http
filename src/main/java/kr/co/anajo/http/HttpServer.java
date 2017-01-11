@@ -1,5 +1,6 @@
 package kr.co.anajo.http;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -34,8 +35,7 @@ public class HttpServer {
 				channelFuture = ch.closeFuture();
 				channelFuture.sync();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "interrupted.", e);
 			} finally {
 				bossGroup.shutdownGracefully();
 				workerGroup.shutdownGracefully();
