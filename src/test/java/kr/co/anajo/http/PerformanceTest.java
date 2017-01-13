@@ -26,8 +26,8 @@ public class PerformanceTest {
 	private static long startTime = 0;
 
 	public static void main(String[] args) throws Exception {
-//		oio();
-		 netty();
+		oio();
+//		 netty();
 	}
 
 	private static void netty() throws Exception {
@@ -86,15 +86,14 @@ public class PerformanceTest {
 				public void run() {
 					OutputStream out;
 					try {
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+//						try {
+//							Thread.sleep(1000);
+//						} catch (InterruptedException e) {
+//							e.printStackTrace();
+//						}
 						out = cs.getOutputStream();
 						out.write("Hell World\n".getBytes(Charset.forName("UTF-8")));
 						out.flush();
-						cs.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 					} finally {
