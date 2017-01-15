@@ -1,7 +1,7 @@
 package kr.co.anajo.http;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -17,7 +17,7 @@ import kr.co.anajo.context.annotation.Initialize;
 @Component
 public class HttpServer {
 
-	private final Logger logger = Logger.getLogger(HttpServer.class.getName());
+	private final Logger logger = LoggerFactory.getLogger(HttpServer.class);
 
 	@Initialize
 	public void startup() {
@@ -35,7 +35,7 @@ public class HttpServer {
 				channelFuture = ch.closeFuture();
 				channelFuture.sync();
 			} catch (InterruptedException e) {
-				logger.log(Level.SEVERE, "interrupted.", e);
+				logger.error("interrupted.", e);
 			} finally {
 				bossGroup.shutdownGracefully();
 				workerGroup.shutdownGracefully();
