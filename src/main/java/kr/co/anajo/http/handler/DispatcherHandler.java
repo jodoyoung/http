@@ -23,8 +23,8 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 			final String uri = request.uri();
 			logger.info(() -> String.format("request uri: %s", uri));
 
-			PathMatcher matcher = ApplicationContext.getInstance().getBean(PathMatcher.class);
-			if (matcher.isStaticUri(uri)) {
+			URLMatcher urlMatcher = ApplicationContext.getInstance().getBean(URLMatcher.class);
+			if (urlMatcher.isStaticUri(uri)) {
 				ApplicationContext.getInstance().getBean(StaticResourceHandler.class).handle(ctx, request);
 				return;
 			}

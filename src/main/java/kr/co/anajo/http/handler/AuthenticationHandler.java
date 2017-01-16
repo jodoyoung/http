@@ -1,67 +1,57 @@
 package kr.co.anajo.http.handler;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.net.InetSocketAddress;
 
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.util.CharsetUtil;
+import kr.co.anajo.component.auth.Session;
+import kr.co.anajo.component.auth.SessionManager;
 import kr.co.anajo.context.ApplicationContext;
+import kr.co.anajo.http.ResponseHelper;
 
 public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-	private static List<String> ignoreAuthenticationUri = new ArrayList<String>();
+	private Logger logger = LoggerFactory.getLogger(AuthenticationHandler.class);
+	
+	private SessionManager sessionManager = ApplicationContext.getInstance().getBean(SessionManager.class);
 
-	static {
-		ignoreAuthenticationUri.add("/auth");
-		ignoreAuthenticationUri.add("/favicon.ico");
-		ignoreAuthenticationUri.add("/static");
-	}
+	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
+
+	private URLMatcher urlMatcher = ApplicationContext.getInstance().getBean(URLMatcher.class);
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
 		if (!request.decoderResult().isSuccess()) {
-			sendError(ctx, BAD_REQUEST);
+			responseHelper.sendError(ctx, BAD_REQUEST);
 			return;
 		}
 
 		final String uri = request.uri();
 
-		PathMatcher matcher = ApplicationContext.getInstance().getBean(PathMatcher.class);
-
-		if (!matcher.isContains(ignoreAuthenticationUri, uri)) {
-			sendRedirect(ctx, "/auth/login");
-			return;
+		if (!urlMatcher.isAuthenticationIgnoreUri(uri)) {
+			String sessionId = request.headers().get(SessionManager.SESSiON_COOKIE_NAME);
+			if(sessionId == null) {
+				responseHelper.sendRedirect(ctx, "/auth/login");
+				return;
+			}
+			Session session = sessionManager.get(sessionId);
+			if(session == null) {
+				responseHelper.sendRedirect(ctx, "/auth/login");
+				return;
+			}
+			InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+			if(!session.isValid(socketAddress.getAddress().getHostAddress())) {
+				responseHelper.sendRedirect(ctx, "/auth/login");
+				return;
+			}
 		}
 		ctx.fireChannelRead(request);
-	}
-
-	private static void sendRedirect(ChannelHandlerContext ctx, String newUri) {
-		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
-		response.headers().set(HttpHeaderNames.LOCATION, newUri);
-
-		// Close the connection as soon as the error message is sent.
-		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-	}
-
-	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
-				Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
-		response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-
-		// Close the connection as soon as the error message is sent.
-		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 	}
 
 }

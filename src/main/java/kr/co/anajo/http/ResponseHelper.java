@@ -32,4 +32,5 @@ public class ResponseHelper {
 		// Close the connection as soon as the error message is sent.
 		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 	}
+
 }

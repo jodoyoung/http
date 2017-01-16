@@ -6,11 +6,15 @@ import java.util.List;
 import kr.co.anajo.context.annotation.Component;
 
 @Component
-public class PathMatcher {
+public class URLMatcher {
 
 	private List<String> ignoreAuthenticationUris = new ArrayList<String>() {
+		private static final long serialVersionUID = -1419472799315132362L;
+
 		{
 			add("/auth");
+			add("/favicon.ico");
+			add("/static");
 		}
 	};
 
