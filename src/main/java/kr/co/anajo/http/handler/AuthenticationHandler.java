@@ -18,7 +18,7 @@ import kr.co.anajo.http.ResponseHelper;
 public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
 	private Logger logger = LoggerFactory.getLogger(AuthenticationHandler.class);
-	
+
 	private SessionManager sessionManager = ApplicationContext.getInstance().getBean(SessionManager.class);
 
 	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
@@ -36,17 +36,20 @@ public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpR
 
 		if (!urlMatcher.isAuthenticationIgnoreUri(uri)) {
 			String sessionId = request.headers().get(SessionManager.SESSiON_COOKIE_NAME);
-			if(sessionId == null) {
+			if (sessionId == null) {
 				responseHelper.sendRedirect(ctx, "/auth/login");
 				return;
 			}
 			Session session = sessionManager.get(sessionId);
-			if(session == null) {
+			if (session == null) {
+				logger.warn("session is null. session id: {}", sessionId);
 				responseHelper.sendRedirect(ctx, "/auth/login");
 				return;
 			}
 			InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-			if(!session.isValid(socketAddress.getAddress().getHostAddress())) {
+			String clientIp = socketAddress.getAddress().getHostAddress();
+			if (!session.isValid(clientIp)) {
+				logger.warn("session is invalid. client ip: {}, session: {}", clientIp, session);
 				responseHelper.sendRedirect(ctx, "/auth/login");
 				return;
 			}

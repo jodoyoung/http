@@ -2,6 +2,10 @@ package kr.co.anajo.component.auth;
 
 import kr.co.anajo.component.member.Member;
 
+/**
+ * @author jodoyoung
+ *
+ */
 public class Session {
 
 	private String ip;
@@ -45,6 +49,36 @@ public class Session {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((ip == null) ? 0 : ip.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Session other = (Session) obj;
+		if (ip == null) {
+			if (other.ip != null)
+				return false;
+		} else if (!ip.equals(other.ip))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Session [ip=" + ip + ", time=" + time + ", status=" + status + "]";
 	}
 
 }
