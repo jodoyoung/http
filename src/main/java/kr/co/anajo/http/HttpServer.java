@@ -31,7 +31,7 @@ public class HttpServer {
 					.handler(new LoggingHandler(LogLevel.INFO)).childHandler(new HttpServerInitializer(null));
 
 			try {
-				Channel ch = b.bind(8080).sync().channel();
+				Channel ch = b.bind(80).sync().channel();
 				channelFuture = ch.closeFuture();
 				channelFuture.sync();
 			} catch (InterruptedException e) {

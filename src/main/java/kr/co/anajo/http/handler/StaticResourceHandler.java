@@ -1,6 +1,7 @@
 package kr.co.anajo.http.handler;
 
 import static io.netty.handler.codec.http.HttpMethod.GET;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
@@ -32,6 +33,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelProgressiveFuture;
 import io.netty.channel.ChannelProgressiveFutureListener;
 import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -47,24 +49,33 @@ import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.SystemPropertyUtil;
 import kr.co.anajo.context.ApplicationContext;
-import kr.co.anajo.context.annotation.Component;
 import kr.co.anajo.http.ResponseHelper;
 
-@Component
-public class StaticResourceHandler {
+public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
 	private final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
 	private final String HTTP_DATE_GMT_TIMEZONE = "GMT";
 	private final int HTTP_CACHE_SECONDS = 60;
 	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
 
-	public void handle(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+	public void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+		if (!request.decoderResult().isSuccess()) {
+			responseHelper.sendError(ctx, BAD_REQUEST);
+			return;
+		}
+
 		if (request.method() != GET) {
 			responseHelper.sendError(ctx, METHOD_NOT_ALLOWED);
 			return;
 		}
 
 		final String uri = request.uri();
+
+		if (!uri.startsWith("/static/")) {
+			ctx.fireChannelRead(request);
+			return;
+		}
+
 		final String path = sanitizeUri(uri);
 		if (path == null) {
 			responseHelper.sendError(ctx, FORBIDDEN);
@@ -303,4 +314,5 @@ public class StaticResourceHandler {
 		MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 		response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
 	}
+
 }

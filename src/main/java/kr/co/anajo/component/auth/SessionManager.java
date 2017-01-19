@@ -3,6 +3,9 @@ package kr.co.anajo.component.auth;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import kr.co.anajo.context.annotation.Component;
+
+@Component
 public class SessionManager {
 	
 	public static String SESSiON_COOKIE_NAME = "AnA_C";

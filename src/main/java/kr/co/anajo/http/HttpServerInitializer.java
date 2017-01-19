@@ -10,6 +10,8 @@ import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketSe
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import kr.co.anajo.http.handler.AuthenticationHandler;
+import kr.co.anajo.http.handler.DispatcherHandler;
+import kr.co.anajo.http.handler.StaticResourceHandler;
 import kr.co.anajo.http.handler.WebSocketFrameHandler;
 import kr.co.anajo.http.handler.WebSocketIndexPageHandler;
 
@@ -33,9 +35,9 @@ public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 		pipeline.addLast(new HttpObjectAggregator(65536));
 		pipeline.addLast(new ChunkedWriteHandler());
 		pipeline.addLast(new AuthenticationHandler());
-//		pipeline.addLast(new StaticResourceHandler());
+		pipeline.addLast(new StaticResourceHandler());
 //		pipeline.addLast(new ApiHandler());
-//		pipeline.addLast(new DispatcherHandler());
+		pipeline.addLast(new DispatcherHandler());
 		pipeline.addLast(new WebSocketServerCompressionHandler());
         pipeline.addLast(new WebSocketServerProtocolHandler("/ws", null, true));
         pipeline.addLast(new WebSocketIndexPageHandler("/ws"));
