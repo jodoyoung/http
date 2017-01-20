@@ -30,10 +30,10 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelProgressiveFuture;
 import io.netty.channel.ChannelProgressiveFutureListener;
 import io.netty.channel.DefaultFileRegion;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -51,14 +51,24 @@ import io.netty.util.internal.SystemPropertyUtil;
 import kr.co.anajo.context.ApplicationContext;
 import kr.co.anajo.http.ResponseHelper;
 
-public class StaticResourceHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class StaticResourceHandler extends ChannelInboundHandlerAdapter {
 
 	private final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
 	private final String HTTP_DATE_GMT_TIMEZONE = "GMT";
 	private final int HTTP_CACHE_SECONDS = 60;
 	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
 
-	public void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+	@Override
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		FullHttpRequest request = null;
+		
+		if(!(msg instanceof FullHttpRequest)) {
+			ctx.fireChannelRead(msg);
+			return;
+		} else {
+			request = (FullHttpRequest) msg;
+		}
+		
 		if (!request.decoderResult().isSuccess()) {
 			responseHelper.sendError(ctx, BAD_REQUEST);
 			return;

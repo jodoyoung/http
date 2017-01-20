@@ -8,14 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
 import kr.co.anajo.component.auth.Session;
 import kr.co.anajo.component.auth.SessionManager;
 import kr.co.anajo.context.ApplicationContext;
 import kr.co.anajo.http.ResponseHelper;
 
-public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class AuthenticationHandler extends ChannelInboundHandlerAdapter {
 
 	private Logger logger = LoggerFactory.getLogger(AuthenticationHandler.class);
 
@@ -26,7 +26,16 @@ public class AuthenticationHandler extends SimpleChannelInboundHandler<FullHttpR
 	private URLMatcher urlMatcher = ApplicationContext.getInstance().getBean(URLMatcher.class);
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		FullHttpRequest request = null;
+
+		if (!(msg instanceof FullHttpRequest)) {
+			ctx.fireChannelRead(msg);
+			return;
+		} else {
+			request = (FullHttpRequest) msg;
+		}
+
 		if (!request.decoderResult().isSuccess()) {
 			responseHelper.sendError(ctx, BAD_REQUEST);
 			return;
