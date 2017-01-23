@@ -36,12 +36,11 @@ public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 		pipeline.addLast(new ChunkedWriteHandler());
 		pipeline.addLast(new AuthenticationHandler());
 		pipeline.addLast(new StaticResourceHandler());
-//		pipeline.addLast(new ApiHandler());
 		pipeline.addLast(new DispatcherHandler());
-		pipeline.addLast(new WebSocketServerCompressionHandler());
-        pipeline.addLast(new WebSocketServerProtocolHandler("/ws", null, true));
-        pipeline.addLast(new WebSocketIndexPageHandler("/ws"));
-        pipeline.addLast(new WebSocketFrameHandler());
+//		pipeline.addLast(new WebSocketServerCompressionHandler());
+//        pipeline.addLast(new WebSocketServerProtocolHandler("/ws", null, true));
+//        pipeline.addLast(new WebSocketIndexPageHandler("/ws"));
+//        pipeline.addLast(new WebSocketFrameHandler());
 	}
 
 }
