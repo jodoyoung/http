@@ -12,14 +12,14 @@ public class H2Test {
 
 	@Test
 	public void createServer() throws SQLException {
-		Server h2db = Server.createTcpServer(null).start();
+		Server h2db = Server.createTcpServer("-tcpPort", "3060", "-tcpAllowOthers").start();
 		getConnection();
 		h2db.stop();
 	}
 	
 	public void getConnection() throws SQLException {
 		JdbcDataSource ds = new JdbcDataSource();
-		ds.setURL("jdbc:h2:~/test");
+		ds.setURL("jdbc:h2:D:\\opt\\db\\anajo");
 		ds.setUser("sa");
 		ds.setPassword("sa");
 		Connection conn = ds.getConnection();
