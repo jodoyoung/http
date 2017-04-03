@@ -19,7 +19,7 @@ public class H2Test {
 	
 	public void getConnection() throws SQLException {
 		JdbcDataSource ds = new JdbcDataSource();
-		ds.setURL("jdbc:h2:D:\\opt\\db\\anajo");
+		ds.setURL("jdbc:h2:C:\\development\\db\\anajo");
 		ds.setUser("sa");
 		ds.setPassword("sa");
 		Connection conn = ds.getConnection();

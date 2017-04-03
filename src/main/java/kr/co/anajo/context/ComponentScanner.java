@@ -7,7 +7,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import kr.co.anajo.context.annotation.Component;
 import kr.co.anajo.context.annotation.Initialize;
@@ -15,7 +17,7 @@ import kr.co.anajo.context.annotation.RequestHandle;
 
 public class ComponentScanner {
 
-	private final Logger logger = Logger.getLogger(ComponentScanner.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(ComponentScanner.class);
 
 	private String basePackage = "/";
 
@@ -59,7 +61,7 @@ public class ComponentScanner {
 						}
 					}
 				} catch (ClassNotFoundException e) {
-					logger.severe(() -> String.format("class not found. %d", e));
+					logger.error("class not found.", e);
 				}
 			}
 		} else {

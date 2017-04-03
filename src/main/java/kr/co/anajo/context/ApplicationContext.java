@@ -8,13 +8,15 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import kr.co.anajo.context.annotation.DI;
 
 public class ApplicationContext {
 
-	private final Logger logger = Logger.getLogger(ApplicationContext.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(ApplicationContext.class);
 
 	private final Map<String, Object> components = new ConcurrentHashMap<String, Object>(10);
 
@@ -74,7 +76,7 @@ public class ApplicationContext {
 		try {
 			bean = klass.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
-			logger.severe(() -> String.format("register bean failed! %s", e));
+			logger.error("register bean failed!", e);
 		}
 
 		this.components.put(name, bean);
@@ -89,7 +91,7 @@ public class ApplicationContext {
 				try {
 					field.set(bean, memberComponent);
 				} catch (Exception e) {
-					logger.severe(() -> String.format("filed mapping failed! %s", e));
+					logger.error("filed mapping failed!", e);
 				}
 			}
 		}
@@ -100,10 +102,10 @@ public class ApplicationContext {
 		try {
 			ComponentScanner scanner = new ComponentScanner(this.basePackage);
 			this.componentDefinitions = scanner.scan();
-			this.initialize();
 			ApplicationContextHolder.instance = this;
+			this.initialize();
 		} catch (IOException | URISyntaxException e) {
-			logger.severe(() -> String.format("component scan failed! %s", e));
+			logger.error("component scan failed!", e);
 		}
 	}
 
@@ -118,9 +120,9 @@ public class ApplicationContext {
 				Method method = klass.getDeclaredMethod(initFunc[1], null);
 				method.invoke(obj, null);
 			} catch (NoSuchMethodException | SecurityException e) {
-				logger.severe(() -> String.format("initialize method not found! %s", e));
+				logger.error("initialize method not found!", e);
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				logger.severe(() -> String.format("initialize method invoke failed! %s", e));
+				logger.error("initialize method invoke failed!", e);
 			}
 		}
 	}

@@ -7,7 +7,7 @@ import kr.co.anajo.context.ApplicationContext;
 
 public class Main {
 
-	private static final Logger logger = LoggerFactory.getLogger(Main.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String[] args) {
 		logger.info("Server Start...");
