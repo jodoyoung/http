@@ -3,6 +3,7 @@ package kr.co.anajo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import kr.co.anajo.config.Env;
 import kr.co.anajo.context.ApplicationContext;
 
 public class Main {
@@ -23,7 +24,7 @@ public class Main {
 		// TODO redis cache
 		// TODO Mbean
 		// TODO index
-
+        System.out.println(Env.docRoot);
 		logger.info("Server Startup. time: {}", System.currentTimeMillis() - startTime);
 	}
 }

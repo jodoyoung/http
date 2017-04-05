@@ -26,16 +26,11 @@ public class ClassLoaderTest {
 		}
 	}
 
-	public void visitClass() throws Exception {
-		Path path = Paths.get("D:\\workspace");
-		visitClass(path.toFile());
-	}
-
 	private void visitClass(File dir) {
 		if (dir.isFile()) {
 			if (dir.toString().matches(regex)) {
 				try {
-					String classFilePullPath = dir.getAbsolutePath();
+					String classFilePullPath = dir.getAbsolutePath().replace(File.separator, ".");
 					String className = classFilePullPath.substring(classFilePullPath.indexOf("kr.co.anajo"), classFilePullPath.lastIndexOf(".class"));
 					System.out.println("############## class file : " + className);
 					Class klass = getClass().getClassLoader().loadClass("kr.co.anajo.Main");
