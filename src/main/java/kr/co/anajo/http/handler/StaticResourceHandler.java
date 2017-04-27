@@ -47,7 +47,7 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.SystemPropertyUtil;
+import kr.co.anajo.config.Env;
 import kr.co.anajo.context.ApplicationContext;
 import kr.co.anajo.http.ResponseHelper;
 
@@ -61,14 +61,14 @@ public class StaticResourceHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		FullHttpRequest request = null;
-		
-		if(!(msg instanceof FullHttpRequest)) {
+
+		if (!(msg instanceof FullHttpRequest)) {
 			ctx.fireChannelRead(msg);
 			return;
 		} else {
 			request = (FullHttpRequest) msg;
 		}
-		
+
 		if (!request.decoderResult().isSuccess()) {
 			responseHelper.sendError(ctx, BAD_REQUEST);
 			return;
@@ -220,7 +220,7 @@ public class StaticResourceHandler extends ChannelInboundHandlerAdapter {
 		}
 
 		// Convert to absolute path.
-		return SystemPropertyUtil.get("user.dir") + File.separator + uri;
+		return Env.docRoot.replace('/', File.separatorChar) + uri;
 	}
 
 	private static final Pattern ALLOWED_FILE_NAME = Pattern.compile("[A-Za-z0-9][-_A-Za-z0-9\\.]*");
