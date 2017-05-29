@@ -1,9 +1,11 @@
 package kr.co.anajo.config;
 
-import java.nio.file.Paths;
-
 public interface Env {
 
-	String docRoot = Paths.get(Env.class.getResourceAsStream("/").toString()).resolve("static").toString();
+	String docRoot = Env.class.getResource("/").getPath();
+	
+	public static void main(String[] args) {
+		System.out.println(docRoot);
+	}
 
 }
