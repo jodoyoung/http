@@ -21,27 +21,24 @@ public class HttpServer {
 
 	@Initialize
 	public void startup() {
-		Thread serverThread = new Thread(() -> {
-			EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-			EventLoopGroup workerGroup = new NioEventLoopGroup(10);
-			ChannelFuture channelFuture = null;
+		EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+		EventLoopGroup workerGroup = new NioEventLoopGroup(10);
+		ChannelFuture channelFuture = null;
 
-			ServerBootstrap b = new ServerBootstrap();
-			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-					.handler(new LoggingHandler(LogLevel.INFO)).childHandler(new HttpServerInitializer(null));
+		ServerBootstrap b = new ServerBootstrap();
+		b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).handler(new LoggingHandler(LogLevel.INFO))
+				.childHandler(new HttpServerInitializer(null));
 
-			try {
-				Channel ch = b.bind(80).sync().channel();
-				channelFuture = ch.closeFuture();
-				channelFuture.sync();
-			} catch (InterruptedException e) {
-				logger.error("interrupted.", e);
-			} finally {
-				bossGroup.shutdownGracefully();
-				workerGroup.shutdownGracefully();
-			}
-		});
-		serverThread.start();
+		try {
+			Channel ch = b.bind(80).sync().channel();
+			channelFuture = ch.closeFuture();
+			channelFuture.sync();
+		} catch (InterruptedException e) {
+			logger.error("interrupted.", e);
+		} finally {
+			bossGroup.shutdownGracefully();
+			workerGroup.shutdownGracefully();
+		}
 	}
 
 }
