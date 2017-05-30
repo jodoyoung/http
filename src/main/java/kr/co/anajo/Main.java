@@ -19,13 +19,6 @@ public class Main {
 			logger.error("application start failed!", t);
 			System.exit(1);
 		}
-<<<<<<< HEAD
-=======
-
-		// TODO redis cache
-		// TODO Mbean
-		// TODO index
-		logger.info("Server Startup. time: {}", System.currentTimeMillis() - startTime);
->>>>>>> branch 'master' of https://github.com/jodoyoung/http.git
 	}
+	
 }
