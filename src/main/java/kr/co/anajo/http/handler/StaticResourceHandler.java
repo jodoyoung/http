@@ -47,7 +47,7 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
-import kr.co.anajo.config.Env;
+import io.netty.util.internal.SystemPropertyUtil;
 import kr.co.anajo.context.ApplicationContext;
 import kr.co.anajo.http.ResponseHelper;
 
@@ -61,14 +61,14 @@ public class StaticResourceHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		FullHttpRequest request = null;
-
-		if (!(msg instanceof FullHttpRequest)) {
+		
+		if(!(msg instanceof FullHttpRequest)) {
 			ctx.fireChannelRead(msg);
 			return;
 		} else {
 			request = (FullHttpRequest) msg;
 		}
-
+		
 		if (!request.decoderResult().isSuccess()) {
 			responseHelper.sendError(ctx, BAD_REQUEST);
 			return;

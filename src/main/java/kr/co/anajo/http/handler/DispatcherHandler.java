@@ -7,7 +7,9 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import java.lang.reflect.Method;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -26,7 +28,7 @@ import kr.co.anajo.http.ResponseHelper;
 
 public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
-	private final Logger logger = Logger.getLogger(DispatcherHandler.class.getName());
+	private final Logger logger = LoggerFactory.getLogger(DispatcherHandler.class);
 
 	private ResponseHelper responseHelper = ApplicationContext.getInstance().getBean(ResponseHelper.class);
 
@@ -54,7 +56,7 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 			String handleClassMethod = applicationContext.getUrlHandler(uri);
 
 			if (handleClassMethod == null) {
-				logger.info(() -> String.format("not found request handler - uri: %s", uri));
+				logger.info("not found request handler - uri: {}", uri);
 				responseHelper.sendError(ctx, NOT_FOUND);
 				return;
 			}
@@ -66,7 +68,7 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 			Object controller = applicationContext.getBean(handleClassName);
 			Class<?> klass = controller.getClass();
 			Method handleMethod = klass.getDeclaredMethod(handleMethodName, null);
-			logger.info(() -> String.format("request uri: %s, handler: %s", uri, handleMethod));
+			logger.info("request uri: {}, handler: {}", uri, handleMethod);
 
 			response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("11111111".getBytes()));
 			response.headers().set(new AsciiString("Content-Type"), "text/plain");
@@ -91,16 +93,16 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 			}
 		}
 	}
-	
+
 	@Override
-    public void channelReadComplete(ChannelHandlerContext ctx) {
-        ctx.flush();
-    }
-	
+	public void channelReadComplete(ChannelHandlerContext ctx) {
+		ctx.flush();
+	}
+
 	@Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        ctx.close();
-    }
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+		cause.printStackTrace();
+		ctx.close();
+	}
 
 }
