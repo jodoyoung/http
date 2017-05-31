@@ -1,9 +1,11 @@
 package kr.co.anajo.config;
 
-import io.netty.util.internal.SystemPropertyUtil;
-
 public interface Env {
 
-	String docRoot = SystemPropertyUtil.get("user.dir") + "/doc";
-}
+	String docRoot = Env.class.getResource("/").getPath();
 	
+	public static void main(String[] args) {
+		System.out.println(docRoot);
+	}
+
+}

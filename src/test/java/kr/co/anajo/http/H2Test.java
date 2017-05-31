@@ -6,11 +6,9 @@ import java.sql.SQLException;
 import org.h2.jdbcx.JdbcDataSource;
 import org.h2.tools.Server;
 import org.junit.Assert;
-import org.junit.Test;
 
 public class H2Test {
 
-	@Test
 	public void createServer() throws SQLException {
 		Server h2db = Server.createTcpServer("-tcpPort", "3060", "-tcpAllowOthers").start();
 		getConnection();

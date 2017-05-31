@@ -33,8 +33,13 @@ public class ComponentScanner {
 				.getResources(this.basePackage.replace(".", "/"));
 		while (resources.hasMoreElements()) {
 			URL url = resources.nextElement();
-			File dir = new File(url.toURI());
-			visitClass(dir, componentDefinitions);
+			System.out.println("########## " + url);
+			if (url.getProtocol().equals("jar")) {
+				
+			} else {
+				File dir = new File(url.toURI());
+				visitClass(dir, componentDefinitions);
+			}
 		}
 		return componentDefinitions;
 	}

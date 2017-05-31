@@ -220,7 +220,7 @@ public class StaticResourceHandler extends ChannelInboundHandlerAdapter {
 		}
 
 		// Convert to absolute path.
-		return SystemPropertyUtil.get("user.dir") + uri;
+		return Env.docRoot.replace('/', File.separatorChar) + uri;
 	}
 
 	private static final Pattern ALLOWED_FILE_NAME = Pattern.compile("[A-Za-z0-9][-_A-Za-z0-9\\.]*");
